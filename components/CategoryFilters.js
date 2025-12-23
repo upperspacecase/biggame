@@ -28,18 +28,27 @@ const CrownIcon = () => (
     </svg>
 );
 
+// Category filters (free)
 const CATEGORIES = [
-    { name: "Chaotic", isPremium: false },
-    { name: "Chill", isPremium: false },
-    { name: "Competitive", isPremium: false },
-    { name: "Family", isPremium: false },
+    { name: "Chaotic", key: "Chaotic" },
+    { name: "Chill", key: "Chill" },
+    { name: "Competitive", key: "Competitive" },
+    { name: "Family", key: "Family" },
+];
+
+// Special filters (some premium)
+const SPECIAL_FILTERS = [
+    { name: "⚡ Quick (<5 min)", key: "quick", isPremium: true },
+    { name: "👥 Large Groups (8+)", key: "large", isPremium: true },
+    { name: "🎯 No Props", key: "noprops", isPremium: true },
+    { name: "🔥 High Energy", key: "High" },
+    { name: "😌 Low Energy", key: "Low" },
 ];
 
 export default function CategoryFilters({
     activeFilter,
     onFilterChange,
     onRandomClick,
-    premiumCategories = []
 }) {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -70,23 +79,53 @@ export default function CategoryFilters({
                 marginTop: "8px"
             }}>
                 {CATEGORIES.map((category) => {
-                    const isPremium = premiumCategories.includes(category.name);
-                    const isActive = activeFilter === category.name;
+                    const isActive = activeFilter === category.key;
 
                     return (
                         <button
-                            key={category.name}
-                            className={`category-tag ${isActive ? "active" : ""} ${isPremium ? "premium" : ""}`}
-                            onClick={() => !isPremium && onFilterChange(category.name)}
-                            disabled={isPremium}
+                            key={category.key}
+                            className={`category-tag ${isActive ? "active" : ""}`}
+                            onClick={() => onFilterChange(category.key)}
                             style={{
                                 display: "flex",
                                 alignItems: "center",
-                                cursor: isPremium ? "not-allowed" : "pointer"
+                                cursor: "pointer"
                             }}
                         >
                             {category.name}
-                            {isPremium && <CrownIcon />}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Special Filters */}
+            <div style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: "6px",
+                paddingTop: "8px",
+                borderTop: "2px dashed var(--border-light)"
+            }}>
+                {SPECIAL_FILTERS.map((filter) => {
+                    const isActive = activeFilter === filter.key;
+
+                    return (
+                        <button
+                            key={filter.key}
+                            className={`category-tag ${isActive ? "active" : ""} ${filter.isPremium ? "premium" : ""}`}
+                            onClick={() => !filter.isPremium && onFilterChange(filter.key)}
+                            disabled={filter.isPremium}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                cursor: filter.isPremium ? "not-allowed" : "pointer",
+                                fontSize: "12px",
+                                padding: "6px 12px",
+                            }}
+                        >
+                            {filter.name}
+                            {filter.isPremium && <CrownIcon />}
                         </button>
                     );
                 })}

@@ -81,9 +81,17 @@ export default function HomePage() {
   };
 
   const handleAddClick = () => {
-    // Open add game modal
+    setEditGame(null); // Clear any previous edit game
     setShowAddModal(true);
   };
+
+  const handleEditGame = (game) => {
+    setEditGame(game);
+    setSelectedGame(null); // Close detail modal
+    setShowAddModal(true); // Open edit modal
+  };
+
+  const [editGame, setEditGame] = useState(null);
 
   return (
     <main style={{ minHeight: "100vh", paddingBottom: "48px" }}>
@@ -178,14 +186,19 @@ export default function HomePage() {
         <GameDetailModal
           game={selectedGame}
           onClose={handleCloseModal}
+          onEdit={handleEditGame}
         />
       )}
 
-      {/* Add Game Modal */}
+      {/* Add/Edit Game Modal */}
       {showAddModal && (
         <AddGameModal
-          onClose={() => setShowAddModal(false)}
+          onClose={() => {
+            setShowAddModal(false);
+            setEditGame(null);
+          }}
           onGameAdded={fetchGames}
+          editGame={editGame}
         />
       )}
     </main>

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 // Icons
 const LightningIcon = () => (
     <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 24, height: 24 }}>
@@ -40,7 +42,14 @@ const ShareIcon = () => (
     </svg>
 );
 
-export default function GameDetailModal({ game, onClose }) {
+const EditIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+);
+
+export default function GameDetailModal({ game, onClose, onEdit }) {
     if (!game) return null;
 
     const {
@@ -61,23 +70,23 @@ export default function GameDetailModal({ game, onClose }) {
         return `${duration.min} min`;
     };
 
-    const handleShare = async () => {
-        const shareData = {
-            title: name,
-            text: `Check out this party game: ${name}`,
-            url: window.location.href,
-        };
+    const [copied, setCopied] = useState(false);
 
-        if (navigator.share) {
-            try {
-                await navigator.share(shareData);
-            } catch {
-                console.log("Share cancelled");
-            }
-        } else {
-            // Fallback: copy to clipboard
-            navigator.clipboard.writeText(window.location.href);
-            alert("Link copied to clipboard!");
+    const handleShare = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // Fallback for older browsers
+            const textArea = document.createElement("textarea");
+            textArea.value = window.location.href;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
         }
     };
 
@@ -194,10 +203,20 @@ export default function GameDetailModal({ game, onClose }) {
 
                 {/* Footer */}
                 <div className="modal-footer">
-                    <button className="btn-share" onClick={handleShare} style={{ flex: 1, justifyContent: "center" }}>
+                    <button className="btn-share" onClick={handleShare}>
                         <ShareIcon />
-                        Share Game
+                        {copied ? "Copied!" : "Copy Link"}
                     </button>
+                    {onEdit && (
+                        <button
+                            className="btn-play"
+                            onClick={() => onEdit(game)}
+                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                        >
+                            <EditIcon />
+                            Edit Game
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

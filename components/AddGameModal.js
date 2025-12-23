@@ -16,23 +16,25 @@ const ENERGY_LEVELS = [
     { value: "High", color: "red" },
 ];
 
-export default function AddGameModal({ onClose, onGameAdded }) {
+export default function AddGameModal({ onClose, onGameAdded, editGame = null }) {
+    const isEditMode = !!editGame;
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [formData, setFormData] = useState({
-        name: "",
-        subtitle: "",
-        tags: [],
-        playerMin: 2,
-        playerMax: 8,
-        durationMin: 5,
-        durationMax: 10,
-        energy: "Medium",
-        energyColor: "yellow",
-        tagline: "",
-        setup: "",
-        rules: "",
-        tips: "",
+        name: editGame?.name || "",
+        subtitle: editGame?.subtitle || "",
+        tags: editGame?.tags || [],
+        playerMin: editGame?.playerCount?.min || 2,
+        playerMax: editGame?.playerCount?.max || 8,
+        durationMin: editGame?.duration?.min || 5,
+        durationMax: editGame?.duration?.max || 10,
+        energy: editGame?.energy || "Medium",
+        energyColor: editGame?.energyColor || "yellow",
+        tagline: editGame?.tagline || "",
+        setup: editGame?.setup?.join("\n") || "",
+        rules: editGame?.rules?.join("\n") || "",
+        tips: editGame?.tips?.join("\n") || "",
+        videoUrl: editGame?.videoUrl || "",
     });
 
     const handleTagToggle = (tag) => {
@@ -76,17 +78,21 @@ export default function AddGameModal({ onClose, onGameAdded }) {
                 setup: formData.setup ? formData.setup.split("\n").filter(s => s.trim()) : [],
                 rules: formData.rules ? formData.rules.split("\n").filter(s => s.trim()) : [],
                 tips: formData.tips ? formData.tips.split("\n").filter(s => s.trim()) : [],
+                videoUrl: formData.videoUrl || undefined,
                 isPremium: false,
             };
 
-            const response = await fetch("/api/games", {
-                method: "POST",
+            const url = isEditMode ? `/api/games/${editGame._id}` : "/api/games";
+            const method = isEditMode ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(gameData),
             });
 
             if (!response.ok) {
-                throw new Error("Failed to add game");
+                throw new Error(isEditMode ? "Failed to update game" : "Failed to add game");
             }
 
             onGameAdded?.();
@@ -118,7 +124,7 @@ export default function AddGameModal({ onClose, onGameAdded }) {
                         fontSize: "24px",
                         color: "white",
                     }}>
-                        Add New Game
+                        {isEditMode ? "Edit Game" : "Add New Game"}
                     </h1>
                 </div>
 
@@ -392,6 +398,27 @@ export default function AddGameModal({ onClose, onGameAdded }) {
                                 }}
                             />
                         </div>
+
+                        {/* Video URL */}
+                        <div style={{ marginBottom: "16px" }}>
+                            <label style={{ display: "block", fontWeight: 700, marginBottom: "6px" }}>
+                                Video URL (YouTube, TikTok, etc.)
+                            </label>
+                            <input
+                                type="url"
+                                value={formData.videoUrl}
+                                onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+                                placeholder="https://youtube.com/watch?v=..."
+                                style={{
+                                    width: "100%",
+                                    padding: "12px 16px",
+                                    border: "2px solid var(--border-dark)",
+                                    borderRadius: "12px",
+                                    fontSize: "16px",
+                                    fontFamily: "inherit",
+                                }}
+                            />
+                        </div>
                     </div>
 
                     {/* Footer */}
@@ -410,7 +437,7 @@ export default function AddGameModal({ onClose, onGameAdded }) {
                             disabled={loading || !formData.name}
                             style={{ opacity: loading || !formData.name ? 0.6 : 1 }}
                         >
-                            {loading ? "Adding..." : "Add Game"}
+                            {loading ? (isEditMode ? "Saving..." : "Adding...") : (isEditMode ? "Save Changes" : "Add Game")}
                         </button>
                     </div>
                 </form>

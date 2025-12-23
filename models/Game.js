@@ -62,6 +62,14 @@ const gameSchema = mongoose.Schema(
         tips: [{
             type: String,
         }],
+        videoUrl: {
+            type: String,
+            trim: true,
+        },
+        propsNeeded: {
+            type: Boolean,
+            default: true,
+        },
         isPremium: {
             type: Boolean,
             default: false,

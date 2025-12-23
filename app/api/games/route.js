@@ -14,9 +14,25 @@ export async function GET(request) {
 
         let query = {};
 
-        // Filter by tag if provided
+        // Filter by tag (category)
         if (tag && tag !== "all") {
-            query.tags = { $regex: new RegExp(tag, "i") };
+            // Handle special filters
+            if (tag === "High" || tag === "Low" || tag === "Medium") {
+                // Energy level filter
+                query.energy = tag;
+            } else if (tag === "quick") {
+                // Quick games (under 5 min)
+                query["duration.max"] = { $lte: 5 };
+            } else if (tag === "large") {
+                // Large groups (8+ players)
+                query["playerCount.max"] = { $gte: 8 };
+            } else if (tag === "noprops") {
+                // No props needed
+                query.propsNeeded = false;
+            } else {
+                // Regular category tag
+                query.tags = { $regex: new RegExp(tag, "i") };
+            }
         }
 
         // Search by name if provided
@@ -53,6 +69,13 @@ export async function POST(request) {
         await connectMongo();
 
         const body = await request.json();
+
+        // Auto-generate number if not provided
+        if (!body.number) {
+            const count = await Game.countDocuments();
+            body.number = `#${String(count + 1).padStart(3, "0")}`;
+        }
+
         const game = await Game.create(body);
 
         return NextResponse.json(game, { status: 201 });
