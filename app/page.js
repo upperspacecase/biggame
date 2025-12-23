@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import AppHeader from "@/components/AppHeader";
 import SearchBar from "@/components/SearchBar";
 import CategoryFilters from "@/components/CategoryFilters";
@@ -14,20 +14,7 @@ export default function HomePage() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedGame, setSelectedGame] = useState(null);
 
-  // Fetch games on mount and when filter changes
-  useEffect(() => {
-    fetchGames();
-  }, [activeFilter]);
-
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchGames();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const fetchGames = async () => {
+  const fetchGames = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -49,7 +36,14 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeFilter, searchQuery]);
+
+  // Fetch games on mount and when dependencies change
+  useEffect(() => {
+    fetchGames();
+  }, [fetchGames]);
+
+  // Debounced search handled by the dependency on searchQuery in fetchGames
 
   const handleRandomClick = async () => {
     try {

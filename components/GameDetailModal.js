@@ -71,7 +71,7 @@ export default function GameDetailModal({ game, onClose }) {
         if (navigator.share) {
             try {
                 await navigator.share(shareData);
-            } catch (err) {
+            } catch {
                 console.log("Share cancelled");
             }
         } else {
@@ -199,7 +199,7 @@ export default function GameDetailModal({ game, onClose }) {
                         Share
                     </button>
                     <button className="btn-play" onClick={onClose}>
-                        Let's Play This!
+                        Let&apos;s Play This!
                     </button>
                 </div>
             </div>

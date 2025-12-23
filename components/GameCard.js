@@ -33,7 +33,7 @@ export default function GameCard({ game, onClick }) {
         tags = [],
         playerCount = { min: 2, max: 4 },
         duration = { min: 5, max: 10 },
-        energy = "Medium",
+        energy: _energy = "Medium",
         energyColor = "yellow",
         tagline,
     } = game;
@@ -88,7 +88,7 @@ export default function GameCard({ game, onClick }) {
                 </div>
 
                 {/* Tagline */}
-                {tagline && <p className="game-tagline">"{tagline}"</p>}
+                {tagline && <p className="game-tagline">&ldquo;{tagline}&rdquo;</p>}
             </div>
         </div>
     );
