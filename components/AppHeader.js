@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { SignInButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 const PlusIcon = () => (
     <svg

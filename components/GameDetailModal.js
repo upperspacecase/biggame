@@ -77,6 +77,8 @@ const getVideoEmbed = (url) => {
 
 export default function GameDetailModal({ game, onClose, onEdit, onStartGame }) {
     const { isSignedIn } = useUser();
+    const [copied, setCopied] = useState(false);
+
     if (!game) return null;
 
     const {
@@ -99,8 +101,6 @@ export default function GameDetailModal({ game, onClose, onEdit, onStartGame }) 
         }
         return `${duration.min} min`;
     };
-
-    const [copied, setCopied] = useState(false);
 
     // Generate shareable game URL
     const getShareUrl = () => {
