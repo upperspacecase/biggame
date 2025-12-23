@@ -62,7 +62,20 @@ export default function CategoryFilters({
                         transform: activeFilter === "all" ? "scale(1.02)" : "scale(1)"
                     }}
                 >
-                    All
+                    All Games
+                </button>
+                <button
+                    className="btn-all"
+                    onClick={() => onFilterChange("favorites")}
+                    style={{
+                        background: activeFilter === "favorites" ? "var(--accent-red)" : "var(--tag-bg)",
+                        color: activeFilter === "favorites" ? "white" : "var(--text-brown)",
+                        opacity: activeFilter === "favorites" ? 1 : 0.8,
+                        transform: activeFilter === "favorites" ? "scale(1.02)" : "scale(1)",
+                        border: "3px solid var(--border-dark)",
+                    }}
+                >
+                    ❤️ My Favorites
                 </button>
                 <button className="btn-random" onClick={onRandomClick}>
                     <ShuffleIcon />

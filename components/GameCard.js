@@ -25,10 +25,18 @@ const ClockIcon = () => (
     </svg>
 );
 
-export default function GameCard({ game, onClick }) {
+// Heart icon for favorites
+const HeartIcon = ({ filled }) => (
+    <svg viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" style={{ width: 24, height: 24 }}>
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+);
+
+export default function GameCard({ game, onClick, isFavorite = false, onFavorite }) {
     if (!game) return null;
 
     const {
+        _id,
         number = "#???",
         name = "Unknown Game",
         subtitle,
@@ -53,11 +61,36 @@ export default function GameCard({ game, onClick }) {
         return `${duration.min} MIN`;
     };
 
+    const handleFavoriteClick = (e) => {
+        e.stopPropagation();
+        onFavorite?.(_id);
+    };
+
     return (
         <div className="game-card" onClick={() => onClick?.(game)}>
             <div className="game-card-content">
                 {/* Game Number */}
                 <span className="game-number">{number}</span>
+
+                {/* Favorite Button */}
+                {onFavorite && (
+                    <button
+                        onClick={handleFavoriteClick}
+                        style={{
+                            position: "absolute",
+                            top: "24px",
+                            right: "80px",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: isFavorite ? "var(--accent-red)" : "var(--text-muted)",
+                            transition: "transform 0.2s, color 0.2s",
+                        }}
+                        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                    >
+                        <HeartIcon filled={isFavorite} />
+                    </button>
+                )}
 
                 {/* Energy Indicator */}
                 <div className={`energy-indicator ${energyClass}`}>

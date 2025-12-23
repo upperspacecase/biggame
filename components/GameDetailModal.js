@@ -49,7 +49,32 @@ const EditIcon = () => (
     </svg>
 );
 
-export default function GameDetailModal({ game, onClose, onEdit }) {
+// Helper to extract video embed URL
+const getVideoEmbed = (url) => {
+    if (!url) return null;
+
+    // YouTube
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch) {
+        return { type: 'youtube', embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}` };
+    }
+
+    // TikTok - just return link for now (embeds require JS SDK)
+    if (url.includes('tiktok.com')) {
+        return { type: 'tiktok', linkUrl: url };
+    }
+
+    // Vimeo
+    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+    if (vimeoMatch) {
+        return { type: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}` };
+    }
+
+    // Generic video URL
+    return { type: 'link', linkUrl: url };
+};
+
+export default function GameDetailModal({ game, onClose, onEdit, onStartGame }) {
     if (!game) return null;
 
     const {
@@ -61,7 +86,10 @@ export default function GameDetailModal({ game, onClose, onEdit }) {
         setup = [],
         rules = [],
         tips = [],
+        videoUrl,
     } = game;
+
+    const videoEmbed = getVideoEmbed(videoUrl);
 
     const formatDuration = () => {
         if (duration.max && duration.max !== duration.min) {
@@ -72,15 +100,23 @@ export default function GameDetailModal({ game, onClose, onEdit }) {
 
     const [copied, setCopied] = useState(false);
 
+    // Generate shareable game URL
+    const getShareUrl = () => {
+        if (typeof window === "undefined") return "";
+        const gameId = game._id || game.id;
+        return `${window.location.origin}/game/${gameId}`;
+    };
+
     const handleShare = async () => {
+        const shareUrl = getShareUrl();
         try {
-            await navigator.clipboard.writeText(window.location.href);
+            await navigator.clipboard.writeText(shareUrl);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
             // Fallback for older browsers
             const textArea = document.createElement("textarea");
-            textArea.value = window.location.href;
+            textArea.value = shareUrl;
             document.body.appendChild(textArea);
             textArea.select();
             document.execCommand("copy");
@@ -146,6 +182,60 @@ export default function GameDetailModal({ game, onClose, onEdit }) {
                         </div>
                     </div>
 
+                    {/* Video Section */}
+                    {videoEmbed && (
+                        <div style={{ marginBottom: "24px" }}>
+                            <div className="section-header">
+                                <div className="section-dot" style={{ background: "var(--accent-red)" }} />
+                                <span className="section-title">Watch How to Play</span>
+                            </div>
+                            {videoEmbed.embedUrl ? (
+                                <div style={{
+                                    position: "relative",
+                                    paddingBottom: "56.25%",
+                                    height: 0,
+                                    borderRadius: "12px",
+                                    overflow: "hidden",
+                                    border: "2px solid var(--border-dark)",
+                                }}>
+                                    <iframe
+                                        src={videoEmbed.embedUrl}
+                                        style={{
+                                            position: "absolute",
+                                            top: 0,
+                                            left: 0,
+                                            width: "100%",
+                                            height: "100%",
+                                            border: 0,
+                                        }}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            ) : (
+                                <a
+                                    href={videoEmbed.linkUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px",
+                                        padding: "12px 16px",
+                                        background: "var(--tag-bg)",
+                                        border: "2px solid var(--border-dark)",
+                                        borderRadius: "12px",
+                                        color: "var(--text-brown)",
+                                        textDecoration: "none",
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    🎬 Watch Video Tutorial
+                                </a>
+                            )}
+                        </div>
+                    )}
+
                     {/* Setup Section */}
                     {setup.length > 0 && (
                         <>
@@ -202,19 +292,28 @@ export default function GameDetailModal({ game, onClose, onEdit }) {
                 </div>
 
                 {/* Footer */}
-                <div className="modal-footer">
+                <div className="modal-footer" style={{ flexWrap: "wrap", gap: "8px" }}>
                     <button className="btn-share" onClick={handleShare}>
                         <ShareIcon />
                         {copied ? "Copied!" : "Copy Link"}
                     </button>
                     {onEdit && (
                         <button
-                            className="btn-play"
+                            className="btn-share"
                             onClick={() => onEdit(game)}
-                            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                         >
                             <EditIcon />
-                            Edit Game
+                            Edit
+                        </button>
+                    )}
+                    {onStartGame && (
+                        <button
+                            className="btn-play"
+                            onClick={() => onStartGame(game)}
+                            style={{ flex: "1 1 100%", marginTop: "4px" }}
+                        >
+                            🎮 Start Game
                         </button>
                     )}
                 </div>

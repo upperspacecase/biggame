@@ -2,20 +2,22 @@
 
 import { useState, useEffect, useCallback } from "react";
 import AppHeader from "@/components/AppHeader";
-import SearchBar from "@/components/SearchBar";
 import CategoryFilters from "@/components/CategoryFilters";
 import GameCard from "@/components/GameCard";
 import GameDetailModal from "@/components/GameDetailModal";
 import AddGameModal from "@/components/AddGameModal";
+import GamePlayMode from "@/components/GamePlayMode";
+import { useFavorites } from "@/hooks/useFavorites";
 
 export default function HomePage() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedGame, setSelectedGame] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showPlayMode, setShowPlayMode] = useState(false);
+  const { isFavorite, toggleFavorite, favorites } = useFavorites();
 
   const fetchGames = useCallback(async () => {
     try {
@@ -27,8 +29,15 @@ export default function HomePage() {
         params.append("tag", activeFilter);
       }
 
-      if (searchQuery) {
-        params.append("search", searchQuery);
+      // Handle favorites filter
+      if (activeFilter === "favorites") {
+        // Filter client-side for favorites
+        const response = await fetch("/api/games");
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        const data = await response.json();
+        const favGames = data.filter(g => favorites.includes(g._id));
+        setGames(favGames);
+        return;
       }
 
       const response = await fetch(`/api/games?${params.toString()}`);
@@ -46,14 +55,12 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  }, [activeFilter, searchQuery]);
+  }, [activeFilter, favorites]);
 
   // Fetch games on mount and when dependencies change
   useEffect(() => {
     fetchGames();
   }, [fetchGames]);
-
-  // Debounced search handled by the dependency on searchQuery in fetchGames
 
   const handleRandomClick = async () => {
     try {
@@ -69,7 +76,6 @@ export default function HomePage() {
 
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
-    setSearchQuery(""); // Clear search when changing filter
   };
 
   const handleGameClick = (game) => {
@@ -98,32 +104,26 @@ export default function HomePage() {
       {/* Header */}
       <AppHeader onAddClick={handleAddClick} />
 
-      {/* Search & Filters Container */}
+      {/* Filters Container */}
       <div style={{
         maxWidth: "500px",
         margin: "0 auto",
         padding: "24px",
       }}>
-        {/* Search Bar */}
+        {/* Filters */}
         <div style={{
           border: "3px solid var(--border-dark)",
           borderRadius: "16px",
           padding: "20px",
-          marginBottom: "24px"
+          marginBottom: "24px",
+          background: "white",
         }}>
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
+          <CategoryFilters
+            activeFilter={activeFilter}
+            onFilterChange={handleFilterChange}
+            onRandomClick={handleRandomClick}
+            premiumCategories={[]}
           />
-
-          <div style={{ marginTop: "16px" }}>
-            <CategoryFilters
-              activeFilter={activeFilter}
-              onFilterChange={handleFilterChange}
-              onRandomClick={handleRandomClick}
-              premiumCategories={[]} // Add premium category names here to lock them
-            />
-          </div>
         </div>
 
         {/* Games List */}
@@ -175,6 +175,8 @@ export default function HomePage() {
                 key={game._id || game.number}
                 game={game}
                 onClick={handleGameClick}
+                isFavorite={isFavorite(game._id)}
+                onFavorite={toggleFavorite}
               />
             ))
           )}
@@ -187,6 +189,18 @@ export default function HomePage() {
           game={selectedGame}
           onClose={handleCloseModal}
           onEdit={handleEditGame}
+          onStartGame={(game) => {
+            setSelectedGame(game);
+            setShowPlayMode(true);
+          }}
+        />
+      )}
+
+      {/* Game Play Mode */}
+      {showPlayMode && selectedGame && (
+        <GamePlayMode
+          game={selectedGame}
+          onClose={() => setShowPlayMode(false)}
         />
       )}
 
