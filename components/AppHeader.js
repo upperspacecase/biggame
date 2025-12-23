@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 const PlusIcon = () => (
     <svg
@@ -30,6 +31,28 @@ export default function AppHeader({ onAddClick }) {
                     priority
                 />
 
+                {/* Auth Buttons */}
+                <div style={{ position: "absolute", right: "20px", top: "50%", transform: "translateY(-50%)" }}>
+                    <SignedOut>
+                        <SignInButton mode="modal">
+                            <button style={{
+                                padding: "8px 16px",
+                                background: "var(--text-brown)",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "8px",
+                                fontWeight: "bold",
+                                cursor: "pointer",
+                                marginRight: "8px"
+                            }}>
+                                Sign In
+                            </button>
+                        </SignInButton>
+                    </SignedOut>
+                    <SignedIn>
+                        <UserButton afterSignOutUrl="/" />
+                    </SignedIn>
+                </div>
             </header>
 
             {/* Add Button - Fixed position */}
