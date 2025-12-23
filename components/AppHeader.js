@@ -30,10 +30,6 @@ export default function AppHeader({ onAddClick }) {
                     priority
                 />
 
-                {/* Subtitle */}
-                <p className="app-subtitle">
-                    Curated Christmas Collection • Vol. 1
-                </p>
             </header>
 
             {/* Add Button - Fixed position */}

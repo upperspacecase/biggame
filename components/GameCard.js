@@ -26,9 +26,11 @@ const ClockIcon = () => (
 );
 
 export default function GameCard({ game, onClick }) {
+    if (!game) return null;
+
     const {
-        number,
-        name,
+        number = "#???",
+        name = "Unknown Game",
         subtitle,
         tags = [],
         playerCount = { min: 2, max: 4 },

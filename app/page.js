@@ -10,6 +10,7 @@ import GameDetailModal from "@/components/GameDetailModal";
 export default function HomePage() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedGame, setSelectedGame] = useState(null);
@@ -17,6 +18,7 @@ export default function HomePage() {
   const fetchGames = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const params = new URLSearchParams();
 
       if (activeFilter !== "all") {
@@ -28,10 +30,16 @@ export default function HomePage() {
       }
 
       const response = await fetch(`/api/games?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
       const data = await response.json();
       setGames(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Error fetching games:", error);
+    } catch (err) {
+      console.error("Error fetching games:", err);
+      setError(err.message);
       setGames([]);
     } finally {
       setLoading(false);
@@ -125,6 +133,19 @@ export default function HomePage() {
                 }}
               />
             ))
+          ) : error ? (
+            <div style={{
+              textAlign: "center",
+              padding: "48px 24px",
+              color: "var(--accent-red)"
+            }}>
+              <p style={{ fontSize: "18px", marginBottom: "8px" }}>
+                Failed to load games
+              </p>
+              <p style={{ fontSize: "14px", color: "var(--text-muted)" }}>
+                {error}
+              </p>
+            </div>
           ) : games.length === 0 ? (
             <div style={{
               textAlign: "center",
