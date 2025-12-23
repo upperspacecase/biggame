@@ -1,71 +1,86 @@
-"use client";
-
 import { useState, useEffect, useCallback } from "react";
-
-const FAVORITES_KEY = "biggame_favorites";
+import { useUser, useClerk } from "@clerk/nextjs";
+import toast from "react-hot-toast";
 
 export function useFavorites() {
+    const { isSignedIn, isLoaded: isAuthLoaded } = useUser();
+    const { openSignIn } = useClerk();
     const [favorites, setFavorites] = useState([]);
-    const [isLoaded, setIsLoaded] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    // Load favorites from localStorage on mount
+    // Fetch favorites from API when signed in
     useEffect(() => {
-        try {
-            const stored = localStorage.getItem(FAVORITES_KEY);
-            if (stored) {
-                setFavorites(JSON.parse(stored));
-            }
-        } catch (e) {
-            console.error("Error loading favorites:", e);
+        if (!isAuthLoaded || !isSignedIn) {
+            setFavorites([]);
+            return;
         }
-        setIsLoaded(true);
-    }, []);
 
-    // Save to localStorage whenever favorites change
-    useEffect(() => {
-        if (isLoaded) {
+        const fetchFavorites = async () => {
             try {
-                localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
-            } catch (e) {
-                console.error("Error saving favorites:", e);
+                const response = await fetch("/api/user/favorites");
+                if (response.ok) {
+                    const data = await response.json();
+                    // Setup favorites as array of IDs
+                    setFavorites(data.map(f => typeof f === 'object' ? f._id : f));
+                }
+            } catch (error) {
+                console.error("Failed to fetch favorites", error);
             }
-        }
-    }, [favorites, isLoaded]);
+        };
+
+        fetchFavorites();
+    }, [isSignedIn, isAuthLoaded]);
 
     const isFavorite = useCallback((gameId) => {
         return favorites.includes(gameId);
     }, [favorites]);
 
-    const toggleFavorite = useCallback((gameId) => {
+    const toggleFavorite = useCallback(async (gameId) => {
+        if (!isSignedIn) {
+            toast.error("Sign in to save favorites", {
+                duration: 3000,
+                icon: "🔒"
+            });
+            openSignIn();
+            return;
+        }
+
+        // Optimistic update
+        const isPreviouslyFavorited = favorites.includes(gameId);
         setFavorites(prev => {
-            if (prev.includes(gameId)) {
+            if (isPreviouslyFavorited) return prev.filter(id => id !== gameId);
+            return [...prev, gameId];
+        });
+
+        const undoOptimisticUpdate = () => {
+            setFavorites(prev => {
+                if (isPreviouslyFavorited) return [...prev, gameId];
                 return prev.filter(id => id !== gameId);
-            } else {
-                return [...prev, gameId];
-            }
-        });
-    }, []);
+            });
+        };
 
-    const addFavorite = useCallback((gameId) => {
-        setFavorites(prev => {
-            if (!prev.includes(gameId)) {
-                return [...prev, gameId];
-            }
-            return prev;
-        });
-    }, []);
+        try {
+            const response = await fetch("/api/user/favorites", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ gameId }),
+            });
 
-    const removeFavorite = useCallback((gameId) => {
-        setFavorites(prev => prev.filter(id => id !== gameId));
-    }, []);
+            if (!response.ok) {
+                throw new Error("Failed to update favorite");
+            }
+        } catch (error) {
+            console.error("Error toggling favorite:", error);
+            toast.error("Failed to save changes");
+            undoOptimisticUpdate();
+        }
+    }, [favorites, isSignedIn, openSignIn]);
 
     return {
-        favorites,
         isFavorite,
         toggleFavorite,
-        addFavorite,
-        removeFavorite,
         count: favorites.length,
-        isLoaded,
+        favorites,
+        isSignedIn
     };
 }

@@ -56,10 +56,22 @@ export default function AppHeader({ onAddClick }) {
             </header>
 
             {/* Add Button - Fixed position */}
+            {/* Add Button - Fixed position */}
             {onAddClick && (
-                <button className="add-button" onClick={onAddClick} aria-label="Add game">
-                    <PlusIcon />
-                </button>
+                <SignedIn>
+                    <button className="add-button" onClick={onAddClick} aria-label="Add game">
+                        <PlusIcon />
+                    </button>
+                </SignedIn>
+            )}
+            {onAddClick && (
+                <SignedOut>
+                    <SignInButton mode="modal">
+                        <button className="add-button" aria-label="Sign in to add game">
+                            <PlusIcon />
+                        </button>
+                    </SignInButton>
+                </SignedOut>
             )}
 
             {/* Divider */}

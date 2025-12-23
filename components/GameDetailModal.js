@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useUser } from "@clerk/nextjs";
 
 // Icons
 const LightningIcon = () => (
@@ -75,6 +76,7 @@ const getVideoEmbed = (url) => {
 };
 
 export default function GameDetailModal({ game, onClose, onEdit, onStartGame }) {
+    const { isSignedIn } = useUser();
     if (!game) return null;
 
     const {
@@ -297,7 +299,7 @@ export default function GameDetailModal({ game, onClose, onEdit, onStartGame }) 
                         <ShareIcon />
                         {copied ? "Copied!" : "Copy Link"}
                     </button>
-                    {onEdit && (
+                    {onEdit && isSignedIn && (
                         <button
                             className="btn-share"
                             onClick={() => onEdit(game)}

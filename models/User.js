@@ -4,6 +4,15 @@ import toJSON from "./plugins/toJSON";
 // USER SCHEMA
 const userSchema = mongoose.Schema(
   {
+    clerkId: {
+      type: String,
+      unique: true,
+      index: true,
+    },
+    favorites: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Game",
+    }],
     name: {
       type: String,
       trim: true,

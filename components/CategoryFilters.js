@@ -1,5 +1,7 @@
 "use client";
 
+import { useUser } from "@clerk/nextjs";
+
 const ShuffleIcon = () => (
     <svg
         viewBox="0 0 24 24"
@@ -50,6 +52,7 @@ export default function CategoryFilters({
     onFilterChange,
     onRandomClick,
 }) {
+    const { isSignedIn } = useUser();
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {/* Main Buttons */}
@@ -122,23 +125,24 @@ export default function CategoryFilters({
             }}>
                 {SPECIAL_FILTERS.map((filter) => {
                     const isActive = activeFilter === filter.key;
+                    const isLocked = filter.isPremium && !isSignedIn;
 
                     return (
                         <button
                             key={filter.key}
-                            className={`category-tag ${isActive ? "active" : ""} ${filter.isPremium ? "premium" : ""}`}
-                            onClick={() => !filter.isPremium && onFilterChange(filter.key)}
-                            disabled={filter.isPremium}
+                            className={`category-tag ${isActive ? "active" : ""} ${isLocked ? "premium" : ""}`}
+                            onClick={() => !isLocked && onFilterChange(filter.key)}
+                            disabled={isLocked}
                             style={{
                                 display: "flex",
                                 alignItems: "center",
-                                cursor: filter.isPremium ? "not-allowed" : "pointer",
+                                cursor: isLocked ? "not-allowed" : "pointer",
                                 fontSize: "12px",
                                 padding: "6px 12px",
                             }}
                         >
                             {filter.name}
-                            {filter.isPremium && <CrownIcon />}
+                            {isLocked && <CrownIcon />}
                         </button>
                     );
                 })}
