@@ -1,45 +1,168 @@
-import Link from "next/link";
-import ButtonSignin from "@/components/ButtonSignin";
+"use client";
 
-export default function Page() {
+import { useState, useEffect } from "react";
+import AppHeader from "@/components/AppHeader";
+import SearchBar from "@/components/SearchBar";
+import CategoryFilters from "@/components/CategoryFilters";
+import GameCard from "@/components/GameCard";
+import GameDetailModal from "@/components/GameDetailModal";
+
+export default function HomePage() {
+  const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [selectedGame, setSelectedGame] = useState(null);
+
+  // Fetch games on mount and when filter changes
+  useEffect(() => {
+    fetchGames();
+  }, [activeFilter]);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchGames();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const fetchGames = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+
+      if (activeFilter !== "all") {
+        params.append("tag", activeFilter);
+      }
+
+      if (searchQuery) {
+        params.append("search", searchQuery);
+      }
+
+      const response = await fetch(`/api/games?${params.toString()}`);
+      const data = await response.json();
+      setGames(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching games:", error);
+      setGames([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRandomClick = async () => {
+    try {
+      const response = await fetch("/api/games?random=true");
+      const data = await response.json();
+      if (data && data.length > 0) {
+        setSelectedGame(data[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching random game:", error);
+    }
+  };
+
+  const handleFilterChange = (filter) => {
+    setActiveFilter(filter);
+    setSearchQuery(""); // Clear search when changing filter
+  };
+
+  const handleGameClick = (game) => {
+    setSelectedGame(game);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedGame(null);
+  };
+
+  const handleAddClick = () => {
+    // Future: Open add game modal or navigate to add page
+    alert("Add game feature coming soon!");
+  };
+
   return (
-    <>
-      <header className="p-4 flex justify-end max-w-7xl mx-auto">
-        <ButtonSignin text="Login" />
-      </header>
-      <main>
-        <section className="flex flex-col items-center justify-center text-center gap-12 px-8 py-24">
-          <h1 className="text-3xl font-extrabold">Ship Fast ⚡️</h1>
+    <main style={{ minHeight: "100vh", paddingBottom: "48px" }}>
+      {/* Header */}
+      <AppHeader onAddClick={handleAddClick} />
 
-          <p className="text-lg opacity-80">
-            The start of your new startup... What are you gonna build?
-          </p>
+      {/* Search & Filters Container */}
+      <div style={{
+        maxWidth: "500px",
+        margin: "0 auto",
+        padding: "24px",
+      }}>
+        {/* Search Bar */}
+        <div style={{
+          border: "3px solid var(--border-dark)",
+          borderRadius: "16px",
+          padding: "20px",
+          marginBottom: "24px"
+        }}>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+          />
 
-          <a
-            className="btn btn-primary"
-            href="https://shipfa.st/docs"
-            target="_blank"
-          >
-            Documentation & tutorials{" "}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="w-5 h-5"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5 10a.75.75 0 01.75-.75h6.638L10.23 7.29a.75.75 0 111.04-1.08l3.5 3.25a.75.75 0 010 1.08l-3.5 3.25a.75.75 0 11-1.04-1.08l2.158-1.96H5.75A.75.75 0 015 10z"
-                clipRule="evenodd"
+          <div style={{ marginTop: "16px" }}>
+            <CategoryFilters
+              activeFilter={activeFilter}
+              onFilterChange={handleFilterChange}
+              onRandomClick={handleRandomClick}
+              premiumCategories={[]} // Add premium category names here to lock them
+            />
+          </div>
+        </div>
+
+        {/* Games List */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {loading ? (
+            // Loading skeleton
+            [...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "var(--bg-card)",
+                  border: "3px solid var(--border-dark)",
+                  borderRadius: "16px",
+                  padding: "24px",
+                  height: "200px",
+                  animation: "pulse 2s infinite",
+                }}
               />
-            </svg>
-          </a>
+            ))
+          ) : games.length === 0 ? (
+            <div style={{
+              textAlign: "center",
+              padding: "48px 24px",
+              color: "var(--text-muted)"
+            }}>
+              <p style={{ fontSize: "18px", marginBottom: "8px" }}>
+                No games found
+              </p>
+              <p style={{ fontSize: "14px" }}>
+                Try a different search or filter
+              </p>
+            </div>
+          ) : (
+            games.map((game) => (
+              <GameCard
+                key={game._id || game.number}
+                game={game}
+                onClick={handleGameClick}
+              />
+            ))
+          )}
+        </div>
+      </div>
 
-          <Link href="/blog" className="link link-hover text-sm">
-            Fancy a blog?
-          </Link>
-        </section>
-      </main>
-    </>
+      {/* Game Detail Modal */}
+      {selectedGame && (
+        <GameDetailModal
+          game={selectedGame}
+          onClose={handleCloseModal}
+        />
+      )}
+    </main>
   );
 }
