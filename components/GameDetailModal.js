@@ -315,7 +315,7 @@ export default function GameDetailModal({ game, onClose, onEdit, onStartGame }) 
                             onClick={() => onStartGame(game)}
                             style={{ flex: "1 1 100%", marginTop: "4px" }}
                         >
-                            🎮 Start Game
+                            ⏱️ Timer & Scoreboard
                         </button>
                     )}
                 </div>

@@ -1,25 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import GameDetailModal from "@/components/GameDetailModal";
 import GamePlayMode from "@/components/GamePlayMode";
+import PricingModal from "@/components/PricingModal";
 
 export default function GamePageClient({ game }) {
     const router = useRouter();
+    const { isSignedIn } = useUser();
     const [showPlayMode, setShowPlayMode] = useState(false);
+    const [showPricing, setShowPricing] = useState(false);
+    const [hasAccess, setHasAccess] = useState(false);
+
+    useEffect(() => {
+        if (isSignedIn) {
+            fetch("/api/user/access")
+                .then(res => res.json())
+                .then(data => setHasAccess(data.hasAccess))
+                .catch(err => console.error(err));
+        } else {
+            setHasAccess(false);
+        }
+    }, [isSignedIn]);
 
     const handleClose = () => {
         router.push("/");
     };
 
     const handleEdit = () => {
-        // For now, redirect to home - could implement inline editing later
         router.push("/?edit=" + game._id);
     };
 
     const handleStartGame = () => {
-        setShowPlayMode(true);
+        if (hasAccess) {
+            setShowPlayMode(true);
+        } else {
+            setShowPricing(true);
+        }
     };
 
     if (showPlayMode) {
@@ -46,6 +65,10 @@ export default function GamePageClient({ game }) {
                 onEdit={handleEdit}
                 onStartGame={handleStartGame}
             />
+
+            {showPricing && (
+                <PricingModal onClose={() => setShowPricing(false)} />
+            )}
         </div>
     );
 }
