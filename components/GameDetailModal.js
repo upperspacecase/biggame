@@ -194,12 +194,9 @@ export default function GameDetailModal({ game, onClose }) {
 
                 {/* Footer */}
                 <div className="modal-footer">
-                    <button className="btn-share" onClick={handleShare}>
+                    <button className="btn-share" onClick={handleShare} style={{ flex: 1, justifyContent: "center" }}>
                         <ShareIcon />
-                        Share
-                    </button>
-                    <button className="btn-play" onClick={onClose}>
-                        Let&apos;s Play This!
+                        Share Game
                     </button>
                 </div>
             </div>

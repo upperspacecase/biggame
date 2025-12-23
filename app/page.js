@@ -6,6 +6,7 @@ import SearchBar from "@/components/SearchBar";
 import CategoryFilters from "@/components/CategoryFilters";
 import GameCard from "@/components/GameCard";
 import GameDetailModal from "@/components/GameDetailModal";
+import AddGameModal from "@/components/AddGameModal";
 
 export default function HomePage() {
   const [games, setGames] = useState([]);
@@ -14,6 +15,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [selectedGame, setSelectedGame] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const fetchGames = useCallback(async () => {
     try {
@@ -79,8 +81,8 @@ export default function HomePage() {
   };
 
   const handleAddClick = () => {
-    // Future: Open add game modal or navigate to add page
-    alert("Add game feature coming soon!");
+    // Open add game modal
+    setShowAddModal(true);
   };
 
   return (
@@ -176,6 +178,14 @@ export default function HomePage() {
         <GameDetailModal
           game={selectedGame}
           onClose={handleCloseModal}
+        />
+      )}
+
+      {/* Add Game Modal */}
+      {showAddModal && (
+        <AddGameModal
+          onClose={() => setShowAddModal(false)}
+          onGameAdded={fetchGames}
         />
       )}
     </main>
